@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Jumbotron, Container, Col, Form, Button, Card, CardColumns } from 'react-bootstrap';
 
+import { useQuery, useMutation } from '@apollo/react-hooks';
+import { SAVE_BOOK } from '../utils/mutations';
+
 import Auth from '../utils/auth';
-import { saveBook, searchGoogleBooks } from '../utils/API';
+import { searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 
 const SearchBooks = () => {
+  const [ saveBook, { error }] = useMutation(SAVE_BOOK);
+
   // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState([]);
   // create state for holding our search field data
@@ -56,6 +61,9 @@ const SearchBooks = () => {
   const handleSaveBook = async (bookId) => {
     // find the book in `searchedBooks` state by the matching id
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
+    const { authors, title, description, image } = bookToSave;
+
+
 
     // get token
     const token = Auth.loggedIn() ? Auth.getToken() : null;
@@ -64,8 +72,25 @@ const SearchBooks = () => {
       return false;
     }
 
+    // try {
+    //   // add thought to database
+    //   await addReaction({
+    //     variables: { reactionBody, thoughtId }
+    //   });
+
+    //   // clear form value
+    //   setBody('');
+    //   setCharacterCount(0);
+    // } catch (e) {
+    //   console.error(e);
+    // }
+
+
     try {
-      const response = await saveBook(bookToSave, token);
+      // const response = await saveBook(bookToSave, token);
+      const response = await saveBook({
+        variables: {bookId, title, description, image}
+      });
 
       if (!response.ok) {
         throw new Error('something went wrong!');
@@ -111,6 +136,7 @@ const SearchBooks = () => {
             ? `Viewing ${searchedBooks.length} results:`
             : 'Search for a book to begin'}
         </h2>
+
         <CardColumns>
           {searchedBooks.map((book) => {
             return (
